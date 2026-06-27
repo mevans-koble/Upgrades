@@ -1,57 +1,119 @@
-import React from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Box, Typography, IconButton, Divider, Paper, Button } from '@mui/material';
-import { Close, CalendarMonth, Notes } from '@mui/icons-material';
-import { format } from 'date-fns';
+import React, { useState, useEffect } from 'react';
+import { 
+  Dialog, DialogTitle, DialogContent, DialogActions, Box, 
+  Typography, IconButton, Divider, TextField, Button 
+} from '@mui/material';
+import { Close, CalendarMonth, Notes, Delete, Save } from '@mui/icons-material';
 
-export default function UpgradeDetailsModal({ activeUpgrade, onClose }) {
+export default function UpgradeDetailsModal({ activeUpgrade, isOpen, onClose, onSave, onDelete }) {
+  const [customer, setCustomer] = useState('');
+  const [upgradeDate, setUpgradeDate] = useState('');
+  const [notes, setNotes] = useState('');
+
+  // Sync internal state inputs when open target changes
+  useEffect(() => {
+    if (activeUpgrade && activeUpgrade.id) {
+      setCustomer(activeUpgrade.customer || '');
+      setUpgradeDate(activeUpgrade.upgradeDate || '');
+      setNotes(activeUpgrade.notes || '');
+    } else {
+      // Clear values if it's a completely new placeholder object
+      setCustomer('');
+      setUpgradeDate('');
+      setNotes('');
+    }
+  }, [activeUpgrade]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave({
+      customer,
+      upgradeDate,
+      notes
+    });
+  };
+
+  const isEditing = activeUpgrade && activeUpgrade.id;
+
   return (
-    <Dialog 
-      open={Boolean(activeUpgrade)} 
-      onClose={onClose}
-      fullWidth
-      maxWidth="sm"
-      PaperProps={{ sx: { borderRadius: 3, p: 1 } }}
-    >
-      {activeUpgrade && (
-        <>
-          <DialogTitle sx={{ m: 0, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Box>
-              <Typography variant="h5" component="div" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-                {activeUpgrade.customer}
-              </Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
-                <CalendarMonth fontSize="inherit" /> Upgrade Date: {format(activeUpgrade.parsedDate, 'MMMM do, yyyy')}
-              </Typography>
-            </Box>
-            <IconButton onClick={onClose} sx={{ color: 'text.secondary' }}>
-              <Close />
-            </IconButton>
-          </DialogTitle>
-          
-          <Divider sx={{ mx: 2 }} />
+    <Dialog open={isOpen} onClose={onClose} fullWidth maxWidth="sm" PaperProps={{ sx: { borderRadius: 3, p: 1 } }}>
+      <form onSubmit={handleSubmit}>
+        <DialogTitle sx={{ m: 0, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box>
+            <Typography variant="h5" component="div" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+              {isEditing ? 'Modify Upgrade Schedule' : 'Schedule New Upgrade'}
+            </Typography>
+          </Box>
+          <IconButton onClick={onClose} sx={{ color: 'text.secondary' }}>
+            <Close />
+          </IconButton>
+        </DialogTitle>
+        
+        <Divider sx={{ mx: 2 }} />
 
-          <DialogContent sx={{ p: 3 }}>
-            <Box display="flex" alignItems="center" gap={1} mb={1.5}>
-              <Notes sx={{ color: 'secondary.main' }} />
-              <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: 'secondary.main', letterSpacing: 0.5 }}>
+        <DialogContent sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+          <TextField
+            label="Customer Name"
+            required
+            fullWidth
+            value={customer}
+            onChange={(e) => setCustomer(e.target.value)}
+          />
+
+          <TextField
+            label="Upgrade Date"
+            type="date"
+            required
+            fullWidth
+            InputLabelProps={{ shrink: true }}
+            value={upgradeDate}
+            onChange={(e) => setUpgradeDate(e.target.value)}
+          />
+
+          <Box>
+            <Box display="flex" alignItems="center" gap={1} mb={1}>
+              <Notes sx={{ color: 'secondary.main', fontSize: 20 }} />
+              <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: 'secondary.main' }}>
                 UPGRADE PROCESS NOTES
               </Typography>
             </Box>
-            
-            <Paper variant="outlined" sx={{ p: 2, bgcolor: '#fcfdfc', borderRadius: 2, minHeight: '100px', borderColor: 'divider' }}>
-              <Typography variant="body1" sx={{ whiteSpace: 'pre-line', color: 'text.primary', lineHeight: 1.6 }}>
-                {activeUpgrade.notes || "No special instructions or notes provided for this deployment block."}
-              </Typography>
-            </Paper>
-          </DialogContent>
+            <TextField
+              multiline
+              rows={4}
+              fullWidth
+              placeholder="Enter special deployment instructions or notes..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
+          </Box>
+        </DialogContent>
 
-          <DialogActions sx={{ px: 3, pb: 2 }}>
-            <Button onClick={onClose} variant="contained" sx={{ bgcolor: 'primary.main', borderRadius: 2, px: 3 }}>
-              Close View
+        <DialogActions sx={{ px: 3, pb: 2, justifyContent: 'space-between' }}>
+          {isEditing ? (
+            <Button 
+              startIcon={<Delete />} 
+              color="error" 
+              onClick={() => onDelete(activeUpgrade.id)}
+            >
+              Delete
             </Button>
-          </DialogActions>
-        </>
-      )}
+          ) : <Box />}
+          
+          <Box display="flex" gap={1}>
+            <Button onClick={onClose} variant="outlined" color="secondary">
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              variant="contained" 
+              startIcon={<Save />}
+              sx={{ bgcolor: 'primary.main' }}
+            >
+              Save Changes
+            </Button>
+          </Box>
+        </DialogActions>
+      </form>
     </Dialog>
   );
 }

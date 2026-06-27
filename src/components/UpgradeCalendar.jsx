@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Container, Typography, Paper, CircularProgress } from '@mui/material';
-import { 
-  format, startOfMonth, endOfMonth, eachDayOfInterval, 
-  isSameDay, addMonths, subMonths, parseISO, differenceInDays 
-} from 'date-fns';
-import { fetchExcelData } from '../utils/api';
+import { Box, Container, Typography, Paper, CircularProgress, Button } from '@mui/material';
+import { Add } from '@mui/icons-material';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, parseISO, differenceInDays } from 'date-fns';
 
-// Sub-component imports
+// CRUD API hooks
+import { fetchExcelData, createUpgrade, updateUpgrade, deleteUpgrade } from '../utils/api';
+
 import CountdownBanner from './CountdownBanner';
 import CalendarHeader from './CalendarHeader';
 import UpgradeDetailsModal from './UpgradeDetailsModal';
@@ -16,12 +15,14 @@ export default function UpgradeCalendar() {
   const [upgrades, setUpgrades] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [nextUpgrade, setNextUpgrade] = useState(null);
+  
+  // UI Modal toggles
   const [activeUpgrade, setActiveUpgrade] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  useEffect(() => {
-    let isMounted = true;
+  // Helper loader to refresh view instantly after data swaps
+  const loadData = () => {
     fetchExcelData().then((data) => {
-      if (!isMounted) return;
       const today = new Date();
       
       const formatted = data.map(item => ({
@@ -37,11 +38,51 @@ export default function UpgradeCalendar() {
       if (upcoming) {
         const daysAway = differenceInDays(upcoming.parsedDate, today);
         setNextUpgrade({ ...upcoming, daysAway });
+      } else {
+        setNextUpgrade(null);
       }
       setLoading(false);
     });
-    return () => { isMounted = false; };
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
+
+  // CRUD Save handler
+  const handleSaveUpgrade = async (fields) => {
+    setLoading(true);
+    setIsModalOpen(false);
+    
+    if (activeUpgrade && activeUpgrade.id) {
+      // Execute UPDATE
+      await updateUpgrade(activeUpgrade.id, fields);
+    } else {
+      // Execute CREATE
+      await createUpgrade(fields);
+    }
+    loadData();
+  };
+
+  // CRUD Delete handler
+  const handleDeleteUpgrade = async (id) => {
+    if (window.confirm("Are you sure you want to delete this schedule window?")) {
+      setLoading(true);
+      setIsModalOpen(false);
+      await deleteUpgrade(id);
+      loadData();
+    }
+  };
+
+  const handleOpenEdit = (upgrade) => {
+    setActiveUpgrade(upgrade);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenCreate = () => {
+    setActiveUpgrade(null); // Explicit clear
+    setIsModalOpen(true);
+  };
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -59,13 +100,23 @@ export default function UpgradeCalendar() {
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <CountdownBanner nextUpgrade={nextUpgrade} />
       
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+        <Button 
+          variant="contained" 
+          startIcon={<Add />} 
+          onClick={handleOpenCreate}
+          sx={{ mb: 2, bgcolor: 'secondary.main', fontWeight: 'bold' }}
+        >
+          Add Upgrade Window
+        </Button>
+      </Box>
+
       <CalendarHeader 
         currentMonth={currentMonth}
         onPrevMonth={() => setCurrentMonth(subMonths(currentMonth, 1))}
         onNextMonth={() => setCurrentMonth(addMonths(currentMonth, 1))}
       />
 
-      {/* --- GRID GRID INTERACTION LAYER --- */}
       <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 1.5 }}>
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
           <Box key={day} sx={{ textAlign: 'center', pb: 1 }}>
@@ -87,10 +138,8 @@ export default function UpgradeCalendar() {
               variant="outlined" 
               sx={{ 
                 minHeight: 110, p: 1.5, display: 'flex', flexDirection: 'column', borderRadius: 2,
-                transition: 'transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out',
                 borderColor: hasUpgrade ? 'customHighlight.dark' : 'divider',
                 bgcolor: hasUpgrade ? 'customHighlight.main' : 'background.paper',
-                '&:hover': { transform: 'translateY(-2px)', boxShadow: 2 }
               }}
             >
               <Typography variant="body2" sx={{ fontWeight: 'bold', color: hasUpgrade ? 'primary.main' : 'text.secondary', mb: 1 }}>
@@ -101,7 +150,7 @@ export default function UpgradeCalendar() {
                 {dayUpgrades.map((upg, i) => (
                   <Box 
                     key={i} 
-                    onClick={() => setActiveUpgrade(upg)}
+                    onClick={() => handleOpenEdit(upg)}
                     sx={{ 
                       bgcolor: 'primary.main', color: 'primary.contrastText', px: 1, py: 0.5, borderRadius: 1,
                       fontSize: '0.72rem', fontWeight: '600', cursor: 'pointer', textOverflow: 'ellipsis',
@@ -118,8 +167,11 @@ export default function UpgradeCalendar() {
       </Box>
 
       <UpgradeDetailsModal 
+        isOpen={isModalOpen}
         activeUpgrade={activeUpgrade} 
-        onClose={() => setActiveUpgrade(null)} 
+        onClose={() => setIsModalOpen(false)} 
+        onSave={handleSaveUpgrade}
+        onDelete={handleDeleteUpgrade}
       />
     </Container>
   );
