@@ -83,7 +83,7 @@ export default function UpgradeCalendar() {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
+      <Box sx={{ height:"100vh",display:"flex", justifyContent:"center", alignItems:"center"}}>
         <CircularProgress color="primary" />
       </Box>
     );
