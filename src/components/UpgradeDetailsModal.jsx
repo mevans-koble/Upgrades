@@ -10,14 +10,12 @@ export default function UpgradeDetailsModal({ activeUpgrade, isOpen, onClose, on
   const [upgradeDate, setUpgradeDate] = useState('');
   const [notes, setNotes] = useState('');
 
-  // Sync internal state inputs when open target changes
   useEffect(() => {
     if (activeUpgrade && activeUpgrade.id) {
       setCustomer(activeUpgrade.customer || '');
       setUpgradeDate(activeUpgrade.upgradeDate || '');
       setNotes(activeUpgrade.notes || '');
     } else {
-      // Clear values if it's a completely new placeholder object
       setCustomer('');
       setUpgradeDate('');
       setNotes('');

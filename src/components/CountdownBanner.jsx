@@ -13,7 +13,7 @@ export default function CountdownBanner({ nextUpgrade }) {
           <Typography variant="overline" sx={{ color: 'customHighlight.main', fontWeight: 'bold', letterSpacing: 1.5 }}>
             NEXT UPCOMING UPGRADE
           </Typography>
-          <Typography variant="h3" component="div" sx={{ fontWeight: 'bold', my: 1 }}>
+          <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', my: 1 }}>
             {nextUpgrade.customer}
           </Typography>
           <Typography variant="subtitle1" sx={{ display: 'flex', alignItems: 'center', gap: 1, opacity: 0.9 }}>

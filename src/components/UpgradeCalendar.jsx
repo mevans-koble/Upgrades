@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Container, Typography, Paper, CircularProgress, Button } from '@mui/material';
-import { Add } from '@mui/icons-material';
+import { Box, Container, Typography, Paper, CircularProgress } from '@mui/material';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, parseISO, differenceInDays } from 'date-fns';
 
-// CRUD API hooks
 import { fetchExcelData, createUpgrade, updateUpgrade, deleteUpgrade } from '../utils/api';
 
 import CountdownBanner from './CountdownBanner';
@@ -16,11 +14,9 @@ export default function UpgradeCalendar() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [nextUpgrade, setNextUpgrade] = useState(null);
   
-  // UI Modal toggles
   const [activeUpgrade, setActiveUpgrade] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Helper loader to refresh view instantly after data swaps
   const loadData = () => {
     fetchExcelData().then((data) => {
       const today = new Date();
@@ -49,16 +45,13 @@ export default function UpgradeCalendar() {
     loadData();
   }, []);
 
-  // CRUD Save handler
   const handleSaveUpgrade = async (fields) => {
     setLoading(true);
     setIsModalOpen(false);
     
     if (activeUpgrade && activeUpgrade.id) {
-      // Execute UPDATE
       await updateUpgrade(activeUpgrade.id, fields);
     } else {
-      // Execute CREATE
       await createUpgrade(fields);
     }
     loadData();
@@ -80,7 +73,7 @@ export default function UpgradeCalendar() {
   };
 
   const handleOpenCreate = () => {
-    setActiveUpgrade(null); // Explicit clear
+    setActiveUpgrade(null); 
     setIsModalOpen(true);
   };
 
@@ -90,7 +83,7 @@ export default function UpgradeCalendar() {
 
   if (loading) {
     return (
-      <Box sx={{display:"flex", justifyContent:"center", alignItems:"center", minHeight:"80vh"}}>
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
         <CircularProgress color="primary" />
       </Box>
     );
@@ -99,22 +92,12 @@ export default function UpgradeCalendar() {
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <CountdownBanner nextUpgrade={nextUpgrade} />
-      
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-        <Button 
-          variant="contained" 
-          startIcon={<Add />} 
-          onClick={handleOpenCreate}
-          sx={{ mb: 2, bgcolor: 'secondary.main', fontWeight: 'bold' }}
-        >
-          Add Upgrade Window
-        </Button>
-      </Box>
 
       <CalendarHeader 
         currentMonth={currentMonth}
         onPrevMonth={() => setCurrentMonth(subMonths(currentMonth, 1))}
         onNextMonth={() => setCurrentMonth(addMonths(currentMonth, 1))}
+        onAddClick={handleOpenCreate}
       />
 
       <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 1.5 }}>
@@ -157,7 +140,7 @@ export default function UpgradeCalendar() {
                       overflow: 'hidden', whiteSpace: 'nowrap', '&:hover': { bgcolor: 'secondary.main' }
                     }}
                   >
-                    {upg.customer}
+                  {upg.customer}
                   </Box>
                 ))}
               </Box>
