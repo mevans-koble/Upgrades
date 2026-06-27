@@ -22,7 +22,7 @@ export default function CountdownBanner({ nextUpgrade }) {
         </Box>
         
         <Box textAlign="center" sx={{ bgcolor: 'rgba(255,255,255,0.1)', px: 3, py: 2, borderRadius: 2, border: '1px solid rgba(255,255,255,0.2)' }}>
-          <Typography variant="h2" sx={{ fontWeight: 'bold', color: 'customHighlight.main', lineHeight: 1 }}>
+          <Typography variant="h2" sx={{ fontWeight: 'bold', color: 'customHighlight.main', lineHeight: 1, display:"flex", justifyContent:"center" }}>
             {nextUpgrade.daysAway}
           </Typography>
           <Typography variant="caption" sx={{ fontWeight: 'bold', letterSpacing: 0.5 }}>

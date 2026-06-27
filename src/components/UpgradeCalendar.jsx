@@ -90,7 +90,7 @@ export default function UpgradeCalendar() {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
+      <Box sx={{display:"flex", justifyContent:"center", alignItems:"center", minHeight:"80vh"}}>
         <CircularProgress color="primary" />
       </Box>
     );
@@ -157,7 +157,7 @@ export default function UpgradeCalendar() {
                       overflow: 'hidden', whiteSpace: 'nowrap', '&:hover': { bgcolor: 'secondary.main' }
                     }}
                   >
-                    📦 {upg.customer}
+                    {upg.customer}
                   </Box>
                 ))}
               </Box>
