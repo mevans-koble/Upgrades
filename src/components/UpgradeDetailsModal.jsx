@@ -59,7 +59,7 @@ export default function UpgradeDetailsModal({ activeUpgrade, isOpen, onClose, on
           />
 
           <TextField
-            label="Upgrade Date"
+            // label="Upgrade Date"
             type="date"
             required
             fullWidth
