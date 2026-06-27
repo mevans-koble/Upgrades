@@ -3,7 +3,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions, Box, 
   Typography, IconButton, Divider, TextField, Button 
 } from '@mui/material';
-import { Close, CalendarMonth, Notes, Delete, Save } from '@mui/icons-material';
+import { Close, Notes, Delete, Save } from '@mui/icons-material';
 
 export default function UpgradeDetailsModal({ activeUpgrade, isOpen, onClose, onSave, onDelete }) {
   const [customer, setCustomer] = useState('');
