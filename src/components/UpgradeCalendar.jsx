@@ -2,10 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Box, Container, Typography, Paper, CircularProgress } from '@mui/material';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, parseISO, differenceInCalendarDays } from 'date-fns';
 
-// CRUD API hooks
 import { fetchExcelData, createUpgrade, updateUpgrade, deleteUpgrade } from '../utils/api';
 
-// Sub-component imports
 import CountdownBanner from './CountdownBanner';
 import CalendarHeader from './CalendarHeader';
 import UpgradeDetailsModal from './UpgradeDetailsModal';
@@ -16,11 +14,9 @@ export default function UpgradeCalendar() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [nextUpgrade, setNextUpgrade] = useState(null);
   
-  // UI Modal toggles
   const [activeUpgrade, setActiveUpgrade] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Helper loader to refresh view instantly after data changes
   const loadData = () => {
     fetchExcelData().then((data) => {
       const today = new Date();
@@ -36,7 +32,6 @@ export default function UpgradeCalendar() {
         .sort((a, b) => a.parsedDate - b.parsedDate)[0];
 
       if (upcoming) {
-        // Using calendar days comparison to fix the timezone offset bug
         const daysAway = differenceInCalendarDays(upcoming.parsedDate, today);
         setNextUpgrade({ ...upcoming, daysAway });
       } else {
@@ -50,22 +45,18 @@ export default function UpgradeCalendar() {
     loadData();
   }, []);
 
-  // CRUD Save handler
   const handleSaveUpgrade = async (fields) => {
     setLoading(true);
     setIsModalOpen(false);
     
     if (activeUpgrade && activeUpgrade.id) {
-      // Execute UPDATE
       await updateUpgrade(activeUpgrade.id, fields);
     } else {
-      // Execute CREATE
       await createUpgrade(fields);
     }
     loadData();
   };
 
-  // CRUD Delete handler
   const handleDeleteUpgrade = async (id) => {
     if (window.confirm("Are you sure you want to delete this schedule window?")) {
       setLoading(true);
@@ -81,7 +72,7 @@ export default function UpgradeCalendar() {
   };
 
   const handleOpenCreate = () => {
-    setActiveUpgrade(null); // Clear active card state context for an empty input form
+    setActiveUpgrade(null); 
     setIsModalOpen(true);
   };
 
@@ -99,10 +90,8 @@ export default function UpgradeCalendar() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* Dynamic upcoming milestone banner */}
       <CountdownBanner nextUpgrade={nextUpgrade} />
 
-      {/* Navigation header banner containing unified operational buttons */}
       <CalendarHeader 
         currentMonth={currentMonth}
         onPrevMonth={() => setCurrentMonth(subMonths(currentMonth, 1))}
@@ -110,7 +99,6 @@ export default function UpgradeCalendar() {
         onAddClick={handleOpenCreate}
       />
 
-      {/* Grid Layout Canvas */}
       <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 1.5 }}>
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
           <Box key={day} sx={{ textAlign: 'center', pb: 1 }}>
@@ -118,7 +106,6 @@ export default function UpgradeCalendar() {
           </Box>
         ))}
 
-        {/* Gray spacer boxes mirroring week start index offsets */}
         {Array.from({ length: monthStart.getDay() }).map((_, index) => (
           <Paper key={`empty-${index}`} variant="outlined" sx={{ minHeight: 110, bgcolor: '#f4f6f4', border: '1px dashed #e0e0e0', borderRadius: 2 }} />
         ))}
@@ -142,7 +129,6 @@ export default function UpgradeCalendar() {
                 {format(day, 'd')}
               </Typography>
               
-              {/* Event blocks listing tags per day cell */}
               <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                 {dayUpgrades.map((upg, i) => (
                   <Box 
@@ -154,7 +140,7 @@ export default function UpgradeCalendar() {
                       overflow: 'hidden', whiteSpace: 'nowrap', '&:hover': { bgcolor: 'secondary.main' }
                     }}
                   >
-                    📦 {upg.customer}
+                  {upg.customer}
                   </Box>
                 ))}
               </Box>
