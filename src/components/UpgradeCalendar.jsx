@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Container, Typography, Paper, CircularProgress } from '@mui/material';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, parseISO, differenceInDays } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, parseISO, differenceInCalendarDays } from 'date-fns';
 
+// CRUD API hooks
 import { fetchExcelData, createUpgrade, updateUpgrade, deleteUpgrade } from '../utils/api';
 
+// Sub-component imports
 import CountdownBanner from './CountdownBanner';
 import CalendarHeader from './CalendarHeader';
 import UpgradeDetailsModal from './UpgradeDetailsModal';
@@ -14,9 +16,11 @@ export default function UpgradeCalendar() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [nextUpgrade, setNextUpgrade] = useState(null);
   
+  // UI Modal toggles
   const [activeUpgrade, setActiveUpgrade] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Helper loader to refresh view instantly after data changes
   const loadData = () => {
     fetchExcelData().then((data) => {
       const today = new Date();
@@ -32,7 +36,8 @@ export default function UpgradeCalendar() {
         .sort((a, b) => a.parsedDate - b.parsedDate)[0];
 
       if (upcoming) {
-        const daysAway = differenceInDays(upcoming.parsedDate, today);
+        // Using calendar days comparison to fix the timezone offset bug
+        const daysAway = differenceInCalendarDays(upcoming.parsedDate, today);
         setNextUpgrade({ ...upcoming, daysAway });
       } else {
         setNextUpgrade(null);
@@ -45,13 +50,16 @@ export default function UpgradeCalendar() {
     loadData();
   }, []);
 
+  // CRUD Save handler
   const handleSaveUpgrade = async (fields) => {
     setLoading(true);
     setIsModalOpen(false);
     
     if (activeUpgrade && activeUpgrade.id) {
+      // Execute UPDATE
       await updateUpgrade(activeUpgrade.id, fields);
     } else {
+      // Execute CREATE
       await createUpgrade(fields);
     }
     loadData();
@@ -73,7 +81,7 @@ export default function UpgradeCalendar() {
   };
 
   const handleOpenCreate = () => {
-    setActiveUpgrade(null); 
+    setActiveUpgrade(null); // Clear active card state context for an empty input form
     setIsModalOpen(true);
   };
 
@@ -83,7 +91,7 @@ export default function UpgradeCalendar() {
 
   if (loading) {
     return (
-      <Box sx={{ height:"100vh",display:"flex", justifyContent:"center", alignItems:"center"}}>
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
         <CircularProgress color="primary" />
       </Box>
     );
@@ -91,8 +99,10 @@ export default function UpgradeCalendar() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
+      {/* Dynamic upcoming milestone banner */}
       <CountdownBanner nextUpgrade={nextUpgrade} />
 
+      {/* Navigation header banner containing unified operational buttons */}
       <CalendarHeader 
         currentMonth={currentMonth}
         onPrevMonth={() => setCurrentMonth(subMonths(currentMonth, 1))}
@@ -100,6 +110,7 @@ export default function UpgradeCalendar() {
         onAddClick={handleOpenCreate}
       />
 
+      {/* Grid Layout Canvas */}
       <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 1.5 }}>
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
           <Box key={day} sx={{ textAlign: 'center', pb: 1 }}>
@@ -107,10 +118,12 @@ export default function UpgradeCalendar() {
           </Box>
         ))}
 
+        {/* Gray spacer boxes mirroring week start index offsets */}
         {Array.from({ length: monthStart.getDay() }).map((_, index) => (
           <Paper key={`empty-${index}`} variant="outlined" sx={{ minHeight: 110, bgcolor: '#f4f6f4', border: '1px dashed #e0e0e0', borderRadius: 2 }} />
         ))}
 
+        {/* Day Grid Engine */}
         {daysInMonth.map((day) => {
           const dayUpgrades = upgrades.filter(u => isSameDay(u.parsedDate, day));
           const hasUpgrade = dayUpgrades.length > 0;
@@ -129,6 +142,7 @@ export default function UpgradeCalendar() {
                 {format(day, 'd')}
               </Typography>
               
+              {/* Event blocks listing tags per day cell */}
               <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                 {dayUpgrades.map((upg, i) => (
                   <Box 
@@ -140,7 +154,7 @@ export default function UpgradeCalendar() {
                       overflow: 'hidden', whiteSpace: 'nowrap', '&:hover': { bgcolor: 'secondary.main' }
                     }}
                   >
-                  {upg.customer}
+                    📦 {upg.customer}
                   </Box>
                 ))}
               </Box>
@@ -149,6 +163,7 @@ export default function UpgradeCalendar() {
         })}
       </Box>
 
+      {/* Central CRUD Dialog Manager */}
       <UpgradeDetailsModal 
         isOpen={isModalOpen}
         activeUpgrade={activeUpgrade} 
