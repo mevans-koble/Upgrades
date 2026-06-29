@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Container, Typography, Paper, CircularProgress } from '@mui/material';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, parseISO, differenceInCalendarDays } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, parseISO, differenceInCalendarDays, startOfDay } from 'date-fns';
 import { useDeviceSizes } from '../hooks/useDeviceSizes';
 import { fetchExcelData, createUpgrade, updateUpgrade, deleteUpgrade } from '../utils/api';
 
@@ -20,7 +20,8 @@ export default function UpgradeCalendar() {
 
   const loadData = () => {
     fetchExcelData().then((data) => {
-      const today = new Date();
+      // Normalize today to midnight so it includes today's date in the filter
+      const today = startOfDay(new Date());
       
       const formatted = data.map(item => ({
         ...item,
@@ -100,7 +101,6 @@ export default function UpgradeCalendar() {
         onAddClick={handleOpenCreate}
       />
 
-      {/* Dynamic layout change: converts from a 7-column grid to a single vertical stack on mobile layout */}
       <Box 
         sx={{ 
           display: 'grid', 
@@ -108,24 +108,20 @@ export default function UpgradeCalendar() {
           gap: 1.5 
         }}
       >
-        {/* Hide weekday labels entirely on mobile layouts */}
         {!isMobileDevice && ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
           <Box key={day} sx={{ textAlign: 'center', pb: 1 }}>
             <Typography variant="subtitle2" sx={{ color: 'secondary.main', fontWeight: 'bold' }}>{day}</Typography>
           </Box>
         ))}
 
-        {/* Hide calendar blank indentation spaces on small viewport screens */}
         {!isMobileDevice && Array.from({ length: monthStart.getDay() }).map((_, index) => (
           <Paper key={`empty-${index}`} variant="outlined" sx={{ minHeight: 110, bgcolor: '#f4f6f4', border: '1px dashed #e0e0e0', borderRadius: 2 }} />
         ))}
 
-        {/* Day Item Canvas */}
         {daysInMonth.map((day) => {
           const dayUpgrades = upgrades.filter(u => isSameDay(u.parsedDate, day));
           const hasUpgrade = dayUpgrades.length > 0;
 
-          // Mobile View Optimization: Collapse empty calendar slots into a clean timeline agenda view
           if (isMobileDevice && !hasUpgrade) return null;
 
           return (
@@ -152,7 +148,6 @@ export default function UpgradeCalendar() {
                   minWidth: isMobileDevice ? '65px' : 'auto'
                 }}
               >
-                {/* Shows short month token prefix on mobile rows to provide context */}
                 {isMobileDevice ? format(day, 'MMM d') : format(day, 'd')}
               </Typography>
               
@@ -176,7 +171,6 @@ export default function UpgradeCalendar() {
         })}
       </Box>
 
-      {/* Central CRUD Dialog Manager */}
       <UpgradeDetailsModal 
         isOpen={isModalOpen}
         activeUpgrade={activeUpgrade} 
